@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    mapper namespace=""：Dao接口的命名空间，指定操作的接口的包名+类名
+-->
+<mapper namespace="com.itheima.dao.UserDao">
+    <!--
+        1：处理当数据库的字段和实体类的属性不一致的情况下，建立映射关系
+        2：处理一对多，或者多对多的集合、对象属性封装的时候，可以建立关系
+
+        id：随意命名
+        type：封装的结果类型
+    -->
+    <resultMap id="userMap" type="user">
+        <id property="uid" column="uid"></id>
+        <result property="username" column="username"></result>
+        <result property="sex" column="sex"></result>
+        <result property="birthday" column="birthday"></result>
+        <result property="address" column="address"></result>
+        <collection property="accountList" ofType="account">
+            <id property="id" column="id"></id>
+            <result property="uid" column="aid"></result>
+            <result property="money" column="money"></result>
+        </collection>
+    </resultMap>
+
+    <select id="findAllUserAccount" resultMap="userMap">
+        SELECT t.*,a.id,a.uid aid,a.money  FROM t_user t LEFT JOIN account a ON t.uid=a.uid;
+    </select>
+
+    <select id="findAll" resultType="com.itheima.pojo.User" >
+      SELECT * FROM t_user
+    </select>
+
+    <!--
+    insert：新增映射
+    id="" ：方法名
+    parameterType="com.itheima.domain.User"：参数类型，使用OGNL表达式读取参数实体中的属性值
+    使用#{}读取User实体中的属性名称
+    需求：在执行完成insert语句之后，将插入的id的值，封装到User实体类中的id属性
+    keyProperty=""：封装User实体中的哪个属性（省略，保证id属性和id字段一致）
+    keyColumn=""：从数据库查询的哪个字段的值
+    resultType="int"：结果类型 java.lang.Integer == int（别名，不区分大小写）
+    order="AFTER"：执行sql语句的顺序，AFTER表示先执行insert再执行select-->
+    <insert id="insert" parameterType="com.itheima.pojo.User" >
+        <selectKey keyProperty="uid" keyColumn="uid" resultType="INT" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO t_user(username,sex,birthday,address) VALUES (#{username},#{sex},#{birthday},#{address})
+    </insert>
+
+    <!--修改数据-->
+    <update id="uodate" parameterType="com.itheima.pojo.User">
+        UPDATE t_user SET username=#{username},sex=#{sex},address=#{address},birthday=#{birthday} WHERE uid = #{uid}
+    </update>
+
+    <!--删除数据-->
+    <!--删除
+        #{}：读取int类型的参数值，因为传递的参数只有1个，使用#{}读取参数的值的时候，可以使用任何名称，因为参数类型完成匹配
+             多个参数怎么办？后续讲解
+             parameterType指定参数类型，
+             也就是说：int是java.lang.Integer的别名
+                       string是java.lang.String的别名
+
+    -->
+    <delete id="delect" parameterType="int">
+        DELETE FROM t_user WHERE uid = #{asd}
+    </delete>
+
+    <!--模糊查询(根据姓名查询  OGNL表达式)-->
+    <select id="selectByName" parameterType="string" resultType="com.itheima.pojo.User">
+        SELECT * from t_user WHERE  username like concat('%',#{sas},'%')
+    </select>
+    <!--模糊查询2($表达式)-->
+    <select id="selectByName2" parameterType="string" resultType="com.itheima.pojo.User">
+         SELECT * from t_user WHERE  username like '%${value}%'
+    </select>
+
+    <!--模糊查询3 复杂类型 QueryVo  ->  User-->
+    <select id="selectByName3" parameterType="com.itheima.pojo.QueryVo" resultType="User">
+          SELECT * from t_user WHERE username LIKE  concat('%',#{user.username},'%')
+    </select>
+
+
+</mapper>

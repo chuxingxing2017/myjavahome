@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+    mapper namespace=""：Dao接口的命名空间，指定操作的接口的包名+类名
+-->
+<mapper namespace="com.itheima.dao.RoleDao">
+    <!--
+        1：处理当数据库的字段和实体类的属性不一致的情况下，建立映射关系
+        2：处理一对多，或者多对多的集合、对象属性封装的时候，可以建立关系
+
+        id：随意命名
+        type：封装的结果类型
+    -->
+    <!--
+    需求：在执行完成insert语句之后，将插入的id的值，封装到User实体类中的id属性
+    keyProperty=""：封装User实体中的哪个属性（省略，保证id属性和id字段一致）
+    keyColumn=""：从数据库查询的哪个字段的值
+    resultType="int"：结果类型 java.lang.Integer == int（别名，不区分大小写）
+    order="AFTER"：执行sql语句的顺序，AFTER表示先执行insert再执行select
+    <selectKey keyProperty="uid" keyColumn="uid" resultType="INT" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>-->
+    <resultMap id="roleMap" type="role">
+        <id property="id" column="id"></id>
+        <result property="rolename" column="role_name"></result>
+        <result property="roleDesc" column="role_desc"></result>
+    </resultMap>
+    <select id="findAllRole" resultMap="roleMap">
+        select * from role;
+    </select>
+    <select id="findAllByMany" parameterType="role" resultMap="roleMap">
+        select * from role
+        <where>
+            <if test="rolename!=null and rolename.length>0">
+                and role_name like concat("%",#{rolename},"%")
+            </if>
+            <if test="ids !=null and ids.size()>0">
+                <foreach collection="ids" item="id" open="and (id=" close=")" separator="or id=">
+                      #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+
+ </mapper>
